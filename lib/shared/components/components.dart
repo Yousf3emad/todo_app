@@ -116,6 +116,7 @@ Widget buildTaskItem(
                         id: model['id'],
                       );
                       if (model['status'] == 'archive') {
+                        return;
                       } else {
                         showToast(
                             message: 'Task is remove to archive successfully',

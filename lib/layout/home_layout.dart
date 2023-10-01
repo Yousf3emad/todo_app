@@ -8,8 +8,8 @@ import 'package:todo_app/shared/cubit/states.dart';
 import '../shared/components/components.dart';
 
 class HomeLayout extends StatelessWidget {
-  var scaffoldKey = GlobalKey<ScaffoldState>();
-  var formKey = GlobalKey<FormState>();
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+  final formKey = GlobalKey<FormState>();
 
   HomeLayout({super.key});
 
@@ -46,12 +46,13 @@ class HomeLayout extends StatelessWidget {
             body: ConditionalBuilder(
               condition: state is! GetDatabaseLoadingState || state is! InitialState,
               builder: (context) => cubit.screens[cubit.currentIndex],
-              fallback: (context) => const Center(child: CircularProgressIndicator()),
+              fallback: (context) => const Center(child: CircularProgressIndicator(color: Colors.blue,)),
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 if (cubit.isBottomSheetShown) {
                   if (formKey.currentState!.validate()) {
+
                     cubit.insertToDatabase(
                         title: cubit.titleController.text,
                         time: cubit.timeController.text,
