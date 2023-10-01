@@ -16,7 +16,7 @@ class HomeLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (BuildContext context) => AppCubit()..createDatabase(),
+      create: (BuildContext context) => AppCubit()..createDatabase()..newTasks..doneTasks..archiveTasks,
       child: BlocConsumer<AppCubit, AppStates>(
         listener: (context, state) {
           if (state is InsertToDatabaseState) {
@@ -26,6 +26,7 @@ class HomeLayout extends StatelessWidget {
         builder: (context, state) {
           AppCubit cubit = BlocProvider.of(context);
           return Scaffold(
+            backgroundColor: Colors.white,
             key: scaffoldKey,
             appBar: AppBar(
               title: Text(
@@ -43,7 +44,7 @@ class HomeLayout extends StatelessWidget {
               ],
             ),
             body: ConditionalBuilder(
-              condition: state is! GetDatabaseLoadingState,
+              condition: state is! GetDatabaseLoadingState || state is! InitialState,
               builder: (context) => cubit.screens[cubit.currentIndex],
               fallback: (context) => const Center(child: CircularProgressIndicator()),
             ),
@@ -55,24 +56,14 @@ class HomeLayout extends StatelessWidget {
                         title: cubit.titleController.text,
                         time: cubit.timeController.text,
                         date: cubit.dateController.text).then((value) {
+
+                         showToast(message: 'Task added successfully',);
+
                          AppCubit.get(context).timeController.text = '';
                          AppCubit.get(context).titleController.text = '';
                          AppCubit.get(context).dateController.text = '';
+
                     });
-                    // insertToDatabase(
-                    //   title: titleController.text,
-                    //   time: timeController.text,
-                    //   date: dateController.text,
-                    // ).then((value) {
-                    //   Navigator.pop(context);
-                    //   timeController.text = '';
-                    //   titleController.text = '';
-                    //   dateController.text = '';
-                    //   // setState(() {
-                    //   //   isBottomSheetShown = false;
-                    //   //   fabIcon = Icons.edit;
-                    //   // });
-                    // });
                   }
                 } else {
                   scaffoldKey.currentState!
@@ -145,6 +136,8 @@ class HomeLayout extends StatelessWidget {
               child: Icon(cubit.fabIcon),
             ),
             bottomNavigationBar: BottomNavigationBar(
+              backgroundColor: Colors.white,
+              elevation: 3.0,
               type: BottomNavigationBarType.fixed,
               currentIndex: cubit.currentIndex,
               onTap: (index) {

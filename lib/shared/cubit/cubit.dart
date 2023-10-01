@@ -8,7 +8,7 @@ import '../../modules/new_tasks.dart';
 
 class AppCubit extends Cubit<AppStates>
 {
-  AppCubit() : super(InitialStates());
+  AppCubit() : super(InitialState());
 
   static AppCubit get(context) => BlocProvider.of(context);
 
@@ -155,6 +155,12 @@ class AppCubit extends Cubit<AppStates>
     isBottomSheetShown = isShow;
     fabIcon = icon;
     emit(ChangeBottomSheetState());
+  }
+
+
+  void updateOnDismissedCancelScreens(){
+    getFromDatabase(database);
+      emit(GetDatabaseState());
   }
 
 
