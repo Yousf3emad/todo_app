@@ -8,15 +8,16 @@ import 'package:todo_app/shared/cubit/states.dart';
 import '../shared/components/components.dart';
 
 class HomeLayout extends StatelessWidget {
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-  final formKey = GlobalKey<FormState>();
-
-  HomeLayout({super.key});
+  const HomeLayout({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (BuildContext context) => AppCubit()..createDatabase()..newTasks..doneTasks..archiveTasks,
+      create: (BuildContext context) => AppCubit()
+        ..createDatabase()
+        ..newTasks
+        ..doneTasks
+        ..archiveTasks,
       child: BlocConsumer<AppCubit, AppStates>(
         listener: (context, state) {
           if (state is InsertToDatabaseState) {
@@ -27,7 +28,7 @@ class HomeLayout extends StatelessWidget {
           AppCubit cubit = BlocProvider.of(context);
           return Scaffold(
             backgroundColor: Colors.white,
-            key: scaffoldKey,
+            key: cubit.scaffoldKey,
             appBar: AppBar(
               title: Text(
                 cubit.titles[cubit.currentIndex],
@@ -38,42 +39,69 @@ class HomeLayout extends StatelessWidget {
               ),
               actions: [
                 IconButton(
-                    onPressed: (){},
-                    icon: const Icon(Icons.sort_rounded,),
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.sort_rounded,
+                  ),
                 ),
               ],
             ),
             body: ConditionalBuilder(
-              condition: state is! GetDatabaseLoadingState || state is! InitialState,
+              condition:
+                  state is! GetDatabaseLoadingState || state is! InitialState,
               builder: (context) => cubit.screens[cubit.currentIndex],
-              fallback: (context) => const Center(child: CircularProgressIndicator(color: Colors.blue,)),
+              fallback: (context) => const Center(
+                  child: CircularProgressIndicator(
+                color: Colors.blue,
+              )),
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 if (cubit.isBottomSheetShown) {
-                  if (formKey.currentState!.validate()) {
+                  if (cubit.formKey.currentState!.validate()) {
+                    if (cubit.fabIcon == Icons.add) {
+                      cubit
+                          .insertToDatabase(
+                              title: cubit.titleController.text,
+                              time: cubit.timeController.text,
+                              date: cubit.dateController.text)
+                          .then((value) {
+                        showToast(
+                          message: 'Task added successfully',
+                        );
 
-                    cubit.insertToDatabase(
+                        AppCubit.get(context).timeController.text = '';
+                        AppCubit.get(context).titleController.text = '';
+                        AppCubit.get(context).dateController.text = '';
+                      });
+                    } else if (cubit.fabIcon == Icons.check) {
+                      debugPrint("in editing now");
+                      cubit
+                          .updateDatabaseTask(
+                        id: cubit.taskId,
                         title: cubit.titleController.text,
                         time: cubit.timeController.text,
-                        date: cubit.dateController.text).then((value) {
-
-                         showToast(message: 'Task added successfully',);
-
-                         AppCubit.get(context).timeController.text = '';
-                         AppCubit.get(context).titleController.text = '';
-                         AppCubit.get(context).dateController.text = '';
-
-                    });
+                        date: cubit.dateController.text,
+                      )
+                          .then((value) {
+                        showToast(
+                            message: 'Task edited successfully',
+                            color: Colors.blue);
+                        cubit.titleController.text = '';
+                        cubit.timeController.text = '';
+                        cubit.dateController.text = '';
+                        Navigator.pop(context);
+                      });
+                    }
                   }
                 } else {
-                  scaffoldKey.currentState!
+                  cubit.scaffoldKey.currentState!
                       .showBottomSheet(
                         (context) => Container(
                           color: Colors.white,
                           padding: const EdgeInsets.all(20.0),
                           child: Form(
-                            key: formKey,
+                            key: cubit.formKey,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -92,14 +120,14 @@ class HomeLayout extends StatelessWidget {
                                   type: TextInputType.none,
                                   onTap: () {
                                     showTimePicker(
-                                        context: context,
-                                        initialTime: TimeOfDay.now())
+                                            context: context,
+                                            initialTime: TimeOfDay.now())
                                         .then((value) {
                                       cubit.timeController.text =
                                           value!.format(context).toString();
                                     });
                                   },
-                                    prefix: Icons.watch_later_rounded,
+                                  prefix: Icons.watch_later_rounded,
                                 ),
                                 const SizedBox(
                                   height: 20.0,
@@ -126,8 +154,10 @@ class HomeLayout extends StatelessWidget {
                           ),
                         ),
                         elevation: 20.0,
-                      ).closed
+                      )
+                      .closed
                       .then((value) {
+                    debugPrint("cloooseeed");
                     cubit.changeBottomSheetState(
                         isShow: false, icon: Icons.edit);
                   });

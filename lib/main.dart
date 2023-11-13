@@ -31,21 +31,17 @@ class MyApp extends StatelessWidget {
             Text(
               'TO DO LIST',
               style: TextStyle(
-                  fontSize: 25.0,
-                  fontWeight: FontWeight.bold,
-
+                fontSize: 25.0,
+                fontWeight: FontWeight.bold,
               ),
             ),
             Text(
               'E F F I C I E N T',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
-        nextScreen: HomeLayout(),
+        nextScreen: const HomeLayout(),
         duration: 280,
         splashIconSize: double.infinity,
         splashTransition: SplashTransition.scaleTransition,

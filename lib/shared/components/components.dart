@@ -2,7 +2,7 @@ import 'package:conditional_builder_null_safety/conditional_builder_null_safety.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
+import 'package:intl/intl.dart';
 
 import 'package:todo_app/shared/cubit/cubit.dart';
 import 'package:todo_app/shared/cubit/states.dart';
@@ -22,6 +22,7 @@ Widget defaultFormField({
         if (value!.isEmpty) {
           return 'field is required';
         }
+        return null;
       },
       decoration: InputDecoration(
         labelText: label,
@@ -30,100 +31,186 @@ Widget defaultFormField({
       ),
     );
 
-
 Widget buildTaskItem(
   Map model,
   context,
 ) =>
-    BlocConsumer<AppCubit,AppStates>(
-      listener: (context,state){},
-      builder: (context,state){
+    BlocConsumer<AppCubit, AppStates>(
+      listener: (context, state) {},
+      builder: (context, state) {
         AppCubit cubit = BlocProvider.of(context);
         return Dismissible(
           key: Key(model['id'].toString()),
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 45.0,
-                  backgroundColor: Colors.blue,
-                  child: CircleAvatar(
-                    radius: 40.0,
-                    backgroundColor: Colors.grey[300],
-                    child: Text(
-                      '${model['time']}',
-                      style: const TextStyle(
-                        fontSize: 17.5,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 20,
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${model['title']}',
-                        style: const TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.all(10.0),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(50.0),
+              onDoubleTap: () {
+                cubit.changeBottomSheetState(isShow: true, icon: Icons.check);
+                cubit.taskId = model['id'];
+                cubit.titleController.text = model['title'];
+                cubit.timeController.text = model['time'];
+                cubit.dateController.text = model['date'];
+                AppCubit.get(context)
+                    .scaffoldKey
+                    .currentState!
+                    .showBottomSheet(
+                      (context) => Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.all(20.0),
+                        child: Form(
+                          key: AppCubit.get(context).formKey,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              defaultFormField(
+                                controller:
+                                    AppCubit.get(context).titleController,
+                                label: 'Task title',
+                                type: TextInputType.text,
+                                prefix: Icons.title,
+                              ),
+                              const SizedBox(
+                                height: 20.0,
+                              ),
+                              defaultFormField(
+                                controller:
+                                    AppCubit.get(context).timeController,
+                                label: 'Task time',
+                                type: TextInputType.none,
+                                onTap: () {
+                                  showTimePicker(
+                                          context: context,
+                                          initialTime: TimeOfDay.now())
+                                      .then((value) {
+                                    AppCubit.get(context).timeController.text =
+                                        value!.format(context).toString();
+                                  });
+                                },
+                                prefix: Icons.watch_later_rounded,
+                              ),
+                              const SizedBox(
+                                height: 20.0,
+                              ),
+                              defaultFormField(
+                                controller:
+                                    AppCubit.get(context).dateController,
+                                label: 'Task date',
+                                type: TextInputType.none,
+                                onTap: () {
+                                  showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime.now(),
+                                    lastDate: DateTime(2024, 5, 23),
+                                  ).then((date) {
+                                    AppCubit.get(context).dateController.text =
+                                        DateFormat.yMMMd().format(date!);
+                                  });
+                                },
+                                prefix: Icons.calendar_month_outlined,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(
-                        height: 2.5,
+                      elevation: 20.0,
+                    )
+                    .closed
+                    .then((value) {
+                  AppCubit.get(context)
+                      .changeBottomSheetState(isShow: false, icon: Icons.edit);
+                  cubit.titleController.text = "";
+                  cubit.timeController.text = "";
+                  cubit.dateController.text = "";
+                });
+                //AppCubit.get(context).changeBottomSheetState(isShow: true, icon: Icons.check);
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 45.0,
+                      backgroundColor: Colors.blue,
+                      child: CircleAvatar(
+                        radius: 40.0,
+                        backgroundColor: Colors.grey[300],
+                        child: Text(
+                          '${model['time']}',
+                          style: const TextStyle(
+                            fontSize: 17.5,
+                            color: Colors.black87,
+                          ),
+                        ),
                       ),
-                      Text(
-                        '${model['date']}',
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${model['title']}',
+                            style: const TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 2.5,
+                          ),
+                          Text(
+                            '${model['date']}',
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  width: 20,
-                ),
-                IconButton(
-                    icon: const Icon(
-                      Icons.check_circle_outline,
-                      color: Colors.blue,
-                      size: 28,
                     ),
-                    onPressed: () {
-                      cubit
-                          .updateDatabase(status: 'done', id: model['id']);
-                      if (model['status'] == 'done') {
-                      } else if(model['status'] == 'archive'){
-                        showToast(message: 'Task is move to done tasks');
-                      }
-                      else {
-                        showToast(message: 'Congratulation! Task is done ');
-                      }
-                    }),
-                IconButton(
-                    icon: const Icon(
-                      Icons.archive_outlined,
-                      color: Colors.black45,
-                      size: 28,
+                    const SizedBox(
+                      width: 20,
                     ),
-                    onPressed: () {
-                      cubit.updateDatabase(
-                        status: 'archive',
-                        id: model['id'],
-                      );
-                      if (model['status'] == 'archive') {
-                        return;
-                      } else {
-                        showToast(
-                            message: 'Task is remove to archive successfully',
-                            color: Colors.redAccent);
-                      }
-                    }),
-              ],
+                    IconButton(
+                        icon: const Icon(
+                          Icons.check_circle_outline,
+                          color: Colors.blue,
+                          size: 28,
+                        ),
+                        onPressed: () {
+                          cubit.updateDatabaseStatus(
+                              status: 'done', id: model['id']);
+                          if (model['status'] == 'done') {
+                          } else if (model['status'] == 'archive') {
+                            showToast(message: 'Task is move to done tasks');
+                          } else {
+                            showToast(message: 'Congratulation! Task is done ');
+                          }
+                        }),
+                    IconButton(
+                        icon: const Icon(
+                          Icons.archive_outlined,
+                          color: Colors.black45,
+                          size: 28,
+                        ),
+                        onPressed: () {
+                          cubit.updateDatabaseStatus(
+                            status: 'archive',
+                            id: model['id'],
+                          );
+                          if (model['status'] == 'archive') {
+                            return;
+                          } else {
+                            showToast(
+                                message:
+                                    'Task is remove to archive successfully',
+                                color: Colors.redAccent);
+                          }
+                        }),
+                  ],
+                ),
+              ),
             ),
           ),
           confirmDismiss: (direction) async {
@@ -166,8 +253,7 @@ Widget buildTaskItem(
                           Expanded(
                             child: TextButton(
                               onPressed: () {
-                                cubit
-                                    .deleteDatabase(id: model['id']);
+                                cubit.deleteDatabase(id: model['id']);
                                 Navigator.pop(context);
                               },
                               child: const Text(
@@ -213,14 +299,14 @@ Widget taskBuilder({required List<Map> tasks}) => ConditionalBuilder(
         return emptyScreen(
           img: const AssetImage('assets/images/newScreen.jpg'),
         );
-      } else if (AppCubit.get(context).currentIndex == 1){
+      } else if (AppCubit.get(context).currentIndex == 1) {
         return emptyScreen(
           img: const AssetImage('assets/images/doneScreen.jpg'),
         );
       }
-        return emptyScreen(
-          img: const AssetImage('assets/images/archiveScreen.jpg'),
-        );
+      return emptyScreen(
+        img: const AssetImage('assets/images/archiveScreen.jpg'),
+      );
     });
 
 Widget listSetting() => ListView(
@@ -273,7 +359,8 @@ void showToast({
 
 Widget emptyScreen({
   required AssetImage img,
-}) => Center(
+}) =>
+    Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

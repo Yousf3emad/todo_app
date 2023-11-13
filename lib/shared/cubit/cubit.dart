@@ -17,6 +17,9 @@ class AppCubit extends Cubit<AppStates>
   var timeController = TextEditingController();
   var dateController = TextEditingController();
 
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+  final formKey = GlobalKey<FormState>();
+
   List<Widget> screens = const [
     NewTasks(),
     DoneTasks(),
@@ -45,26 +48,26 @@ class AppCubit extends Cubit<AppStates>
        'todo.dp',
        version: 1,
       onCreate: (database, version) {
-        print('DataBase Created ');
+        debugPrint('DataBase Created ');
 
         database
             .execute(
             'CREATE TABLE tasks(id INTEGER PRIMARY KEY,title TEXT, date TEXT,time TEXT, status TEXT)')
             .then((value) {
-          print(' Table Created ');
+          debugPrint(' Table Created ');
         }).catchError((error) {
-          print('Error when Creating Table: ${error.toString()} ');
+          debugPrint('Error when Creating Table: ${error.toString()} ');
         });
       },
       onOpen: ( database) {
         getFromDatabase(database);
-        print(' DataBase opened ');
+        debugPrint(' DataBase opened ');
       },
     ).then((value) {
       database = value ;
       emit(CreateDatabaseState());
      }).catchError((error){
-       print('error when open database-> ${error.toString()}');
+        debugPrint('error when open database-> ${error.toString()}');
       });
   }
 
@@ -80,11 +83,11 @@ class AppCubit extends Cubit<AppStates>
           .rawInsert(
           'INSERT INTO tasks(title, date, time, status) VALUES("$title", "$date", "$time", "new")')
           .then((value) {
-        print("$value inserted successfully ");
+        debugPrint("$value inserted successfully ");
         emit(InsertToDatabaseState());
         getFromDatabase(database);
       }).catchError((error) {
-        print('Error when inserting new record ${error.toString()}');
+        debugPrint('Error when inserting new record ${error.toString()}');
       });
 
       return null;
@@ -116,7 +119,7 @@ class AppCubit extends Cubit<AppStates>
 
   }
 
-  void updateDatabase({
+  void updateDatabaseStatus({
     required String status,
     required int id,
 })
@@ -127,8 +130,28 @@ class AppCubit extends Cubit<AppStates>
     ).then((value){
 
       getFromDatabase(database);
-      emit(UpdateDatabaseState());
+      emit(UpdateDatabaseStatusState());
      });
+  }
+
+  late int taskId;
+  Future updateDatabaseTask({
+    required String title,
+    required String time,
+    required String date,
+    required int id,
+  })
+   async{
+    database.rawUpdate(
+      'UPDATE tasks SET title = ? ,time = ?, date = ? WHERE id = ?',
+      [title,time,date, id],
+    ).then((value){
+      debugPrint("$value edited successfully ");
+      emit(UpdateDatabaseTaskState());
+      getFromDatabase(database);
+    }).catchError((error){
+      debugPrint('Error when editing the task ${error.toString()}');
+    });
   }
 
   void deleteDatabase({
@@ -162,6 +185,5 @@ class AppCubit extends Cubit<AppStates>
     getFromDatabase(database);
       emit(GetDatabaseState());
   }
-
 
 }
